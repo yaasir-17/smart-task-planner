@@ -1,0 +1,252 @@
+{% extends "layout.html" %}
+
+{% block body %}
+
+<div class="text-end mb-4">
+    <h3>Today: {{ today_display }}</h3>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h4 class="card-title mb-3">Add Task</h4>
+
+        <form action="/add" method="post">
+
+            <div class="mb-3">
+                <input class="form-control" name="title" placeholder="Title" type="text" required>
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <input class="form-control" name="due_date" type="date">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <select class="form-select" name="priority">
+                        <option value="0">Low Priority</option>
+                        <option value="1" selected>Medium Priority</option>
+                        <option value="2">High Priority</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn btn-dark" type="submit">Add Task</button>
+
+            {% if error %}
+            <div class="alert alert-danger mt-3">{{ error }}</div>
+            {% endif %}
+
+        </form>
+    </div>
+</div>
+
+<div class="row mb-4">
+
+    <div class="col-md-3">
+        <div class="card text-center shadow-sm border-primary">
+            <div class="card-body">
+                <h6 class="text-muted">Total Tasks</h6>
+                <h2>{{ total }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-center shadow-sm border-warning">
+            <div class="card-body">
+                <h6 class="text-muted">Pending</h6>
+                <h2>{{ pending }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-center shadow-sm border-success">
+            <div class="card-body">
+                <h6 class="text-muted">Completed</h6>
+                <h2>{{ completed }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-center shadow-sm border-danger">
+            <div class="card-body">
+                <h6 class="text-muted">Overdue</h6>
+                <h2>{{ overdue }}</h2>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% if recommended %}
+
+<div class="card shadow-sm border-start border-5 border-dark mx-auto col-md-4 mb-4"> 
+
+    <div class="card-body text-center">
+
+        <h6 class="text-muted mb-2">
+            ⭐ Recommended Next Task
+        </h6>
+
+        <h2 class="mb-2">
+            {{ recommended["title"] }}
+        </h2>
+
+        {% if recommended["priority"] == 2 %}
+            <span class="badge bg-danger">High Priority</span>
+        {% elif recommended["priority"] == 1 %}
+            <span class="badge bg-warning text-dark">Medium Priority</span>
+        {% else %}
+            <span class="badge bg-success">Low Priority</span>
+        {% endif %}
+
+        {% if recommended["due_date"] < today %}
+            <p class="text-danger mt-2 mb-0">
+                ⚠ Overdue
+            </p>
+        {% else %}
+            <p class="text-muted mb-0">
+                📅 {{ due_text }}
+            </p>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endif %}
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+
+        <form action="/" method="get">
+
+            <div class="row align-items-center">
+
+                <div class="col-md-5">
+                    <input type="text" class="form-control" name="search" placeholder="Search tasks..." 
+                    {% if search %} value="{{ search }}" {% endif %}>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center gap-2">
+
+                        <label class="col-md-3 mb-0">Sort By:</label>
+
+                        <select class="form-select" name="sort">
+
+                            <option value="default" {% if sort == "default" %}selected{% endif %}>
+                                Default
+                            </option>
+
+                            <option value="priority" {% if sort == "priority" %}selected{% endif %}>
+                                Priority
+                            </option>
+
+                            <option value="due_date" {% if sort == "due_date" %}selected{% endif %}>
+                                Due Date
+                            </option>
+
+                        </select>
+
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <button class="btn btn-primary w-100" type="submit">Go</button>
+                </div>
+                <div class="col-md-2">
+                    <a href="/" class="btn btn-secondary w-100">Clear</a>
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h3 class="mb-3">My Tasks</h3>
+        {% if search and not tasks %}
+
+        <div class="alert alert-info">
+            No matching tasks found.
+        </div>
+
+        {% elif not tasks %}
+
+        <div class="alert alert-info">
+            No tasks yet. Add your first task!
+        </div>
+
+        {% else %}
+
+        <table class="table table-hover align-middle">
+
+            <thead>
+                <th>Title</th>
+                <th>Due Date</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </thead>
+
+            <tbody>
+
+            {% for task in tasks %}
+
+            <tr {% if task["due_date"] < today and not task["completed"] %} class="table-danger" {% endif %}>
+                <td class="{% if task['completed'] %}text-muted{% endif %}">{{ task["title"] }}</td>
+                <td>{{ task["due_date"] }}</td>
+                <td>
+                    {% if task["priority"] == 2 %}
+                    <span class="badge bg-danger">High</span>
+                    {% elif task["priority"] == 1 %}
+                    <span class="badge bg-warning text-dark">Medium</span>
+                    {% else %}
+                    <span class="badge bg-success">Low</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if task["completed"] %}
+                    <span class="badge bg-success">Completed</span>
+                    {% elif not task["completed"] and task["due_date"] < today %}
+                    <span class="badge bg-danger">Overdue</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Pending</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="d-flex gap-2">
+                        {% if not task["completed"] %}
+                        <form action="/complete" method="post">
+                            <input name="id" value="{{ task['id'] }}" hidden>
+                            <button class="btn btn-success btn-sm" type="submit">✓</button>
+                        </form>
+                        {% endif %}
+                        <a href="/edit?id={{ task['id'] }}" class="btn btn-warning btn-sm">Edit</a>
+                        <form action="/delete" method="post">
+                            <input name="id" value="{{ task['id'] }}" hidden>
+                            <button class="btn btn-danger btn-sm" onclick="return confirm('Delete this task?')" type="submit">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

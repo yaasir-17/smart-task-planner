@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+
+{% block body %}
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h4 class="card-title mb-3">Edit Task</h4>
+
+        <form action="/edit" method="post">
+            <input name="id" value="{{ task['id'] }}" hidden>
+            <div class="mb-3">
+                <input class="form-control" name="title" placeholder="Title" type="text" value="{{ task['title'] }}" required>
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <input class="form-control" name="due_date" type="date" value="{{ task['due_date'] }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <select class="form-select" name="priority">
+                        <option value="0" {% if task["priority"] == 0 %} selected {% endif %}>Low Priority</option>
+                        <option value="1" {% if task["priority"] == 1 %} selected {% endif %}>Medium Priority</option>
+                        <option value="2" {% if task["priority"] == 2 %} selected {% endif %}>High Priority</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-dark">Save Changes</button>
+                <a href="/" class="btn btn-secondary">Cancel</a>
+            </div>
+            
+            {% if error %}
+            <div class="alert alert-danger mt-3">{{ error }}</div>
+            {% endif %}
+
+        </form>
+    </div>
+</div>
+
+{% endblock %}
